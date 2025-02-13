@@ -1,6 +1,10 @@
-import { loadUsers, saveUsers } from '@/../lib/db';
+import { loadUsers } from '@/../lib/db';
+import { authenticate } from '@/../lib/authMiddleware';
 
-export async function GET() {
+export async function GET(req) {
+    const authResponse = authenticate(req);
+    if (authResponse) return authResponse;
+
     try {
         const users = await loadUsers();
         return new Response(JSON.stringify(users), {
@@ -16,7 +20,7 @@ export async function GET() {
                 status: 500,
                 headers: {
                     'Content-Type': 'application/json',
-                }
+                },
             }
         );
     }

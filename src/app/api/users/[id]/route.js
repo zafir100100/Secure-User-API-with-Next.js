@@ -1,6 +1,10 @@
 import { loadUsers } from '@/../lib/db';
+import { authenticate } from '@/../lib/authMiddleware';
 
-export async function GET(_, { params }) {
+export async function GET(req, { params }) {
+    const authResponse = authenticate(req);
+    if (authResponse) return authResponse;
+
     const { id } = await params;
 
     try {
