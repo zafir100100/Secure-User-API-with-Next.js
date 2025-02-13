@@ -1,7 +1,7 @@
 import { loadUsers } from '@/../lib/db';
 
-export async function GET({ params }) {
-    const { id } = params;
+export async function GET(_, { params }) {
+    const { id } = await params;
 
     try {
         const users = await loadUsers();
