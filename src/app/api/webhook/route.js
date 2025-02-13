@@ -1,19 +1,10 @@
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { loadUsers, saveUsers } from '@/../lib/db';
-import { cp } from 'fs';
 
 const secret = 'your-secret-key';
 
-const validateSignature = async (req) => {
-    const signature = req.headers.get('X-Signature');
-
-    if (!signature) {
-        return false;
-    }
-
-    // Read the request body as a string (exactly as in the generator)
-    const body = await req.json();
+const validateSignature = (signature, body) => {
     const payloadString = JSON.stringify(body);
 
     const hash = crypto
@@ -25,15 +16,17 @@ const validateSignature = async (req) => {
 };
 
 export async function POST(req) {
-    if (!await validateSignature(req)) {
-        return NextResponse.json(
-            { error: 'Invalid signature' },
-            { status: 400 }
-        );
-    }
-
     try {
         const body = await req.json();
+        const signature = req.headers.get('X-Signature');
+
+        if (!validateSignature(signature, body)) {
+            return NextResponse.json(
+                { error: 'Invalid signature' },
+                { status: 400 }
+            );
+        }
+
         const { eventType, data } = body;
 
         if (!eventType || !data) {
