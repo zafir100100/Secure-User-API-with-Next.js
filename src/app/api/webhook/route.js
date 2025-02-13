@@ -1,30 +1,31 @@
-import fs from 'fs-extra';
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
+import { loadUsers, saveUsers } from '@/../lib/db';
+import { cp } from 'fs';
 
-const SECRET_KEY = 'your-secret-key';
-const DB_PATH = 'db.json';
+const secret = 'your-secret-key';
 
-const validateSignature = (req) => {
+const validateSignature = async (req) => {
     const signature = req.headers.get('X-Signature');
-    const payload = req.body;
 
     if (!signature) {
         return false;
     }
 
+    // Read the request body as a string (exactly as in the generator)
+    const body = await req.json();
+    const payloadString = JSON.stringify(body);
+
     const hash = crypto
-        .createHmac('sha256', SECRET_KEY)
-        .update(payload)
+        .createHmac('sha256', secret)
+        .update(payloadString)
         .digest('hex');
 
     return signature === hash;
 };
 
 export async function POST(req) {
-    const body = await req.json();
-
-    if (!validateSignature(req)) {
+    if (!await validateSignature(req)) {
         return NextResponse.json(
             { error: 'Invalid signature' },
             { status: 400 }
@@ -32,6 +33,7 @@ export async function POST(req) {
     }
 
     try {
+        const body = await req.json();
         const { eventType, data } = body;
 
         if (!eventType || !data) {
@@ -41,22 +43,16 @@ export async function POST(req) {
             );
         }
 
-        let db = [];
-
-        try {
-            db = await fs.readJson(DB_PATH);
-        } catch (err) {
-            db = [];
-        }
-
-        db.push({ eventType, data });
-        await fs.writeJson(DB_PATH, db);
+        const users = await loadUsers();
+        users.push({ eventType, data });
+        await saveUsers(users);
 
         return NextResponse.json(
             { success: true, message: 'Received' },
             { status: 200 }
         );
     } catch (error) {
+        console.error(error);
         return NextResponse.json(
             { error: 'Unable to process request' },
             { status: 500 }
