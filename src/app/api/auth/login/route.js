@@ -1,5 +1,6 @@
 import { loadUsers } from '@/../lib/db';
 import jwt from 'jsonwebtoken';
+import { NextResponse } from 'next/server';
 
 const JWT_SECRET = 'your-secret-key';
 
@@ -9,16 +10,16 @@ export async function POST(req) {
     const user = users.find(u => u.email === email && u.password === password);
 
     if (!user) {
-        return new Response(
-            JSON.stringify({ error: 'Invalid email or password' }),
-            { status: 401, headers: { 'Content-Type': 'application/json' } }
+        return NextResponse.json(
+            { error: 'Invalid email or password' },
+            { status: 401 }
         );
     }
 
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
 
-    return new Response(
-        JSON.stringify({ token }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
+    return NextResponse.json(
+        { token },
+        { status: 200 }
     );
 }

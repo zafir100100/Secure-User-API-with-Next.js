@@ -1,5 +1,6 @@
 import { loadUsers, saveUsers } from '@/../lib/db';
 import { authenticate } from '@/../lib/authMiddleware';
+import { NextResponse } from 'next/server';
 
 export async function GET(req) {
     const authResponse = authenticate(req);
@@ -7,21 +8,16 @@ export async function GET(req) {
 
     try {
         const users = await loadUsers();
-        return new Response(JSON.stringify(users), {
+        return NextResponse.json(users, {
             status: 200,
             headers: {
                 'Content-Type': 'application/json',
             },
         });
     } catch (error) {
-        return new Response(
-            JSON.stringify({ error: 'Unable to fetch users' }),
-            {
-                status: 500,
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            }
+        return NextResponse.json(
+            { error: 'Unable to fetch users' },
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
         );
     }
 }
@@ -30,8 +26,8 @@ export async function POST(req) {
     try {
         const { name, email, password } = await req.json();
         if (!name || !email || !password) {
-            return new Response(
-                JSON.stringify({ error: 'Missing required fields' }),
+            return NextResponse.json(
+                { error: 'Missing required fields' },
                 { status: 400, headers: { 'Content-Type': 'application/json' } }
             );
         }
@@ -41,13 +37,13 @@ export async function POST(req) {
         users.push(newUser);
         await saveUsers(users);
 
-        return new Response(JSON.stringify(newUser), {
+        return NextResponse.json(newUser, {
             status: 201,
             headers: { 'Content-Type': 'application/json' },
         });
     } catch (error) {
-        return new Response(
-            JSON.stringify({ error: 'Unable to create user' }),
+        return NextResponse.json(
+            { error: 'Unable to create user' },
             { status: 500, headers: { 'Content-Type': 'application/json' } }
         );
     }
