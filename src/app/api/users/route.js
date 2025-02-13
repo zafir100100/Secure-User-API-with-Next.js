@@ -1,4 +1,4 @@
-import { loadUsers } from '@/../lib/db';
+import { loadUsers, saveUsers } from '@/../lib/db';
 import { authenticate } from '@/../lib/authMiddleware';
 
 export async function GET(req) {
